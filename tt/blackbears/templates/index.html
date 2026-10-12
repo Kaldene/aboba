@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClubControl | Дашборд аналитики</title>
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --border: #334155;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .header span {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Красивая зона загрузки */
+        .upload-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .dropzone {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .dropzone:hover {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        input[type="file"] {
+            opacity: 0;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%;
+            cursor: pointer;
+        }
+
+        .dropzone-content p {
+            margin: 0 0 1rem 0;
+            color: var(--text-muted);
+        }
+
+        .dropzone-content span {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        button {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 6px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+            z-index: 10;
+        }
+
+        button:hover:not(:disabled) { background: var(--accent-hover); }
+        button:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
+
+        #message {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            display: none;
+            font-weight: 500;
+        }
+        #message.success { display: block; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); }
+        #message.error { display: block; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); }
+
+        /* Таблица */
+        .table-container {
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: rgba(0,0,0,0.2);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+
+        .file-name { font-weight: 500; color: var(--text-main); }
+        .file-meta { font-size: 0.85rem; color: var(--text-muted); }
+
+        /* Бейджи */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge.uploaded { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .badge.completed { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+
+        .score-high { color: var(--success); font-weight: bold; }
+        .score-low { color: var(--danger); font-weight: bold; }
+        .empty { padding: 2rem; text-align: center; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>ClubControl <span style="color: var(--accent)">|</span> Аналитика</h1>
+    <span>Клуб: CyberArena</span>
+</div>
+
+<div class="upload-card">
+    <form id="upload-form">
+        <div class="dropzone" id="dropzone">
+            <input type="file" id="file-input" accept=".wav,.mp3" required>
+            <div class="dropzone-content">
+                <p id="file-name-display">Перетащите аудиофайл сюда или <span>выберите на компьютере</span></p>
+                <button type="submit" id="submit-btn">Отправить на анализ</button>
+            </div>
+        </div>
+    </form>
+    <div id="message"></div>
+</div>
+
+<h2 style="margin-bottom: 1rem; font-size: 1.2rem;">История смен</h2>
+
+{% if recordings %}
+<div class="table-container">
+    <table>
+        <thead>
+        <tr>
+            <th>Файл / Дата</th>
+            <th>Статус</th>
+            <th>Оценка ИИ</th>
+            <th>Вердикт</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for r in recordings %}
+        <tr>
+            <td>
+                <div class="file-name">{{ r.original_filename }}</div>
+                <div class="file-meta">{{ r.created_at }} • {{ r.file_size }} байт</div>
+            </td>
+            <td>
+                <span class="badge {{ r.status }}">{{ r.status }}</span>
+            </td>
+            <!-- Заготовки под оценки (если их еще нет в БД, будет просто прочерк) -->
+            <td>
+                {% set score = r.score | default(0) %}
+                {% if score > 0 %}
+                <span class="{% if score >= 70 %}score-high{% else %}score-low{% endif %}">
+                                {{ score }} / 100
+                            </span>
+                {% else %}
+                <span style="color: var(--text-muted)">—</span>
+                {% endif %}
+            </td>
+            <td style="font-size: 0.9rem; color: var(--text-muted);">
+                {{ r.analysis_result | default('Ожидает проверки...') }}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="upload-card empty">
+    <p>Пока нет ни одной записи. Загрузите первый файл смены.</p>
+</div>
+{% endif %}
+
+<script>
+    const form = document.getElementById('upload-form');
+    const fileInput = document.getElementById('file-input');
+    const submitBtn = document.getElementById('submit-btn');
+    const message = document.getElementById('message');
+    const fileNameDisplay = document.getElementById('file-name-display');
+
+    // Красивое обновление текста при выборе файла
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            fileNameDisplay.innerHTML = `Выбран файл: <span style="color: #fff">${e.target.files[0].name}</span>`;
+        } else {
+            fileNameDisplay.innerHTML = 'Перетащите аудиофайл сюда или <span>выберите на компьютере</span>';
+        }
+    });
+
+    function showMessage(text, kind) {
+        message.textContent = text;
+        message.className = kind;
+    }
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        message.className = '';
+        message.textContent = '';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Обработка...';
+
+        try {
+            const response = await fetch('/recordings', {
+                method: 'POST',
+                body: (() => {
+                    const data = new FormData();
+                    data.append('file', fileInput.files[0]);
+                    return data;
+                })(),
+            });
+            const body = await response.json();
+            if (response.ok) {
+                showMessage(`Файл успешно загружен и отправлен на анализ!`, 'success');
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showMessage(`Ошибка: ${body.detail}`, 'error');
+                submitBtn.textContent = 'Отправить на анализ';
+                submitBtn.disabled = false;
+            }
+        } catch (err) {
+            showMessage('Ошибка сети: не удалось отправить файл', 'error');
+            submitBtn.textContent = 'Отправить на анализ';
+            submitBtn.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>
